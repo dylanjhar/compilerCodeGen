@@ -1,6 +1,6 @@
 //============================================================================
 // Name        : compilerCodeGen.cpp
-// Author      : 
+// Author      :
 // Version     :
 // Copyright   : Your copyright notice
 // Description : Hello World in C++, Ansi-style
@@ -31,6 +31,7 @@ map<string, string> symboltable; 	// map of variables to datatype (i.e. sum t_in
 
 // Runtime Global Methods
 void dump(); 				// prints vartable, instable, symboltable
+	// BOTH
 
 // You may need a few additional global methods to manipulate the global variables
 
@@ -57,6 +58,7 @@ public:
 };
 
 class IdExpr : public Expr{
+	// KEEGAN COLLINS
 private:
 	string id;
 public:
@@ -66,6 +68,7 @@ public:
 };
 
 class InFixExpr : public Expr{
+	// BOTH
 private:
 	vector<Expr *> exprs;
 	vector<string> ops;  // tokens of operators
@@ -86,6 +89,7 @@ public:
 };
 
 class AssignStmt : public Stmt{
+	// KEEGAN COLLINS
 private:
 	string var;
 	Expr* p_expr;
@@ -117,6 +121,7 @@ public:
 };
 
 class ExprOutStmt : public Stmt{
+	// KEEGAN COLLINS
 private:
 	Expr* p_expr;
 public:
@@ -127,6 +132,7 @@ public:
 };
 
 class IfStmt : public Stmt{
+	// KEEGAN COLLINS
 private:
 	Expr* p_expr;
 	int elsetarget;
@@ -159,6 +165,7 @@ public:
 };
 
 class Compiler{
+	// BOTH
 private:
 	void buildIf();
 	void buildWhile();
@@ -185,9 +192,11 @@ public:
 
 	// The run method will execute the code in the instruction table
 	void run(){}
+		// KEEGAN COLLINS
 };
 
 int main(){
+	// BOTH
 	ifstream infile1("source1.txt");
 	ifstream infile2("symbol1.txt");
 	if (!infile1 || !infile2) exit(-1);
