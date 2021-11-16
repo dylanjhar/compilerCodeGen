@@ -49,6 +49,7 @@ public:
 };
 
 class ConstExpr : public Expr{
+	// DYLAN HARPER
 private:
 	int value;
 public:
@@ -101,6 +102,7 @@ public:
 };
 
 class InputStmt : public Stmt{
+	// DYLAN HARPER
 private:
 	string var;
 public:
@@ -111,6 +113,7 @@ public:
 };
 
 class StrOutStmt : public Stmt{
+	// DYLAN HARPER
 private:
 	string value;
 public:
@@ -144,6 +147,7 @@ public:
 };
 
 class WhileStmt : public Stmt{
+	// DYLAN HARPER
 private:
 	Expr* p_expr;
 	int elsetarget;
@@ -155,6 +159,7 @@ public:
 };
 
 class GoToStmt: public Stmt{
+	// DYLAN HARPER
 private:
 	int elsetarget;
 public:
@@ -189,6 +194,7 @@ public:
 	// The compile method is responsible for getting the instruction
 	// table built.  It will call the appropriate build methods.
 	bool compile(){}
+		// DYLAN HARPER
 
 	// The run method will execute the code in the instruction table
 	void run(){}
