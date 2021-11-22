@@ -131,10 +131,10 @@ class InputStmt : public Stmt{
 private:
 	string var;
 public:
-	InputStmt();
-	~InputStmt();
-	string toString();
-	void execute();
+	InputStmt(string n, string v):Stmt(n), var(v){}
+	~InputStmt(){};
+	string toString(){};
+	void execute(){};
 };
 
 class StrOutStmt : public Stmt{
@@ -246,7 +246,13 @@ public:
 void Compiler::buildAssign(){
 	//AssignStmt a;
 
+}
 
+void Compiler::buildInput(){
+	string v = *lexitr;
+	InputStmt* i = new InputStmt("t_input", v);
+	insttable.push_back(i);
+	tokitr++; lexitr++;
 }
 
 int main(){
