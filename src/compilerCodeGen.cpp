@@ -30,7 +30,7 @@ map<string, string> symboltable; 	// map of variables to datatype (i.e. sum t_in
 
 
 // Runtime Global Methods
-void dump(); 				// prints vartable, instable, symboltable
+void dump(); 				// prints vartable, insttable, symboltable
 	// BOTH
 
 // You may need a few additional global methods to manipulate the global variables
@@ -84,6 +84,9 @@ private:
 	string name;
 public:
 	Stmt(){}
+	Stmt(string n){name(n);}
+	void setNamer(string n){name = n;}
+	string getName(){return name;}
 	virtual ~Stmt(){};
 	virtual string toString() = 0;
 	virtual void execute() = 0;
@@ -95,10 +98,17 @@ private:
 	string var;
 	Expr* p_expr;
 public:
-	AssignStmt();
+	AssignStmt(string n, string v, Expr* e): Stmt(n), var(v), p_expr(e){}
+	void setVar(string v){var = v;}
+	string getVar(){return var;}
+	void setExp(Expr* e){p_expr = e;}
+	Expr* getExp(){return p_expr;}
 	~AssignStmt();
 	string toString();
+	// used in data dump
 	void execute();
+	// executes the statement (changes contents of variable).
+	var = p_expr;
 };
 
 class InputStmt : public Stmt{
@@ -182,8 +192,33 @@ private:
 	void buildExpr(Expr*&);      Expr* buildExpr();
 
 	// headers for populate methods may not change
-	void populateTokenLexemes(istream& infile){}
-	void populateSymbolTable(istream& infile){}
+	void populateTokenLexemes(istream& infile){
+	    string line, tok, lex;
+	    int pos;
+	    getline(infile, line);
+	    bool valid = true;
+	    while(!infile.eof() && (valid)){
+	        pos = line.find(":");
+	        tok = line.substr(0, pos-1);
+	        lex = line.substr(pos+2, line.length());
+	        //cout << pos << " " << tok << " " << lex << endl;
+	        tokens.push_back(tok);
+	        lexemes.push_back(lex);
+	        getline(infile, line);
+	    }
+	    tokitr = tokens.begin();
+	    lexitr = lexemes.begin();
+	}
+	void populateSymbolTable(istream& infile){
+		string vari, lexe = " ";
+		infile >> vari;
+		infile >> lexe;
+		while (!infile.eof()){
+			symboltable[lexe] = vari;
+			infile >> vari;
+			infile >> lexe;
+		}
+	}
 public:
 	// headers may not change
 	Compiler(istream& source, istream& symbols){
@@ -200,6 +235,12 @@ public:
 	void run(){}
 		// KEEGAN COLLINS
 };
+
+void Compiler::buildAssign(){
+	AssignStmt a;
+
+
+}
 
 int main(){
 	// BOTH

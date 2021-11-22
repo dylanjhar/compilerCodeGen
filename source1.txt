@@ -1,14 +1,12 @@
 t_var : var
 t_integer : integer
 t_id : x
-s_semi: ;
 t_begin : begin
 t_id : x
 s_assign : =
 t_int : 5
 s_plus : +
 t_int : 3
-s_semi : ;
 t_if : if
 s_lparen : (
 t_id : x
@@ -28,7 +26,6 @@ s_assign : =
 t_id : x
 s_minus : -
 t_int : 1
-s_semi : ;
 t_output : output
 s_lparen : (
 t_id : x
