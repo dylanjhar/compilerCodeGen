@@ -30,8 +30,23 @@ map<string, string> symboltable; 	// map of variables to datatype (i.e. sum t_in
 
 
 // Runtime Global Methods
-void dump(); 				// prints vartable, insttable, symboltable
+void dump(){
+	// prints vartable, insttable, symboltable
 	// BOTH
+	map<string, string>::iterator sitr;
+	map<string, int>::iterator vitr;
+
+	cout << "\nsymboltable:" << endl;
+	for(sitr = symboltable.begin(); sitr != symboltable.end(); sitr++) {
+		cout << sitr->first << " " << sitr->second << endl;
+	}
+
+	cout << "\nvartable:" << endl;
+	for(vitr = vartable.begin(); vitr != vartable.end(); vitr++) {
+		cout << vitr->first << " " << vitr->second << endl;
+	}
+}
+
 
 // You may need a few additional global methods to manipulate the global variables
 
@@ -84,7 +99,7 @@ private:
 	string name;
 public:
 	Stmt(){}
-	Stmt(string n){name(n);}
+	Stmt(string n):name(n){}
 	void setNamer(string n){name = n;}
 	string getName(){return name;}
 	virtual ~Stmt(){};
@@ -108,7 +123,7 @@ public:
 	// used in data dump
 	void execute();
 	// executes the statement (changes contents of variable).
-	var = p_expr;
+	//var = p_expr;
 };
 
 class InputStmt : public Stmt{
@@ -193,30 +208,22 @@ private:
 
 	// headers for populate methods may not change
 	void populateTokenLexemes(istream& infile){
-	    string line, tok, lex;
-	    int pos;
-	    getline(infile, line);
-	    bool valid = true;
-	    while(!infile.eof() && (valid)){
-	        pos = line.find(":");
-	        tok = line.substr(0, pos-1);
-	        lex = line.substr(pos+2, line.length());
-	        //cout << pos << " " << tok << " " << lex << endl;
+	    string tok, lex;
+	    infile >> tok >> lex;
+	    while(!infile.eof()){
 	        tokens.push_back(tok);
 	        lexemes.push_back(lex);
-	        getline(infile, line);
+	        infile >> tok >> lex;
 	    }
 	    tokitr = tokens.begin();
 	    lexitr = lexemes.begin();
 	}
 	void populateSymbolTable(istream& infile){
-		string vari, lexe = " ";
-		infile >> vari;
-		infile >> lexe;
+		string vari, tok;
+		infile >> vari >> tok;
 		while (!infile.eof()){
-			symboltable[lexe] = vari;
-			infile >> vari;
-			infile >> lexe;
+			symboltable[vari] = tok;
+			infile >> vari >> tok;
 		}
 	}
 public:
@@ -237,7 +244,7 @@ public:
 };
 
 void Compiler::buildAssign(){
-	AssignStmt a;
+	//AssignStmt a;
 
 
 }
@@ -250,5 +257,6 @@ int main(){
 	Compiler c(infile1, infile2);
 	c.compile();
 	c.run();
+	dump();
 	return 0;
 }
