@@ -78,9 +78,9 @@ class IdExpr : public Expr{
 private:
 	string id;
 public:
-	IdExpr(string s);
-	int eval();
-	string toString();
+	IdExpr(string i):id(i){}
+	int eval(){return 0;}
+	string toString(){return "IdExpr: " + id;}
 };
 
 class InFixExpr : public Expr{
@@ -93,6 +93,7 @@ public:
 	int eval();
 	string toString();
 };
+
 
 class Stmt{ // statements are executed!
 private:
@@ -119,7 +120,7 @@ public:
 	void setExp(Expr* e){p_expr = e;}
 	Expr* getExp(){return p_expr;}
 	~AssignStmt();
-	string toString();
+	string toString(){return "t_assign :";}
 	// used in data dump
 	void execute();
 	// executes the statement (changes contents of variable).
@@ -156,9 +157,9 @@ class ExprOutStmt : public Stmt{
 private:
 	Expr* p_expr;
 public:
-	ExprOutStmt();
-	~ExprOutStmt();
-	string toString();
+	ExprOutStmt(string x, Expr* e):Stmt(x), p_expr(e){};
+	~ExprOutStmt(){delete p_expr;}
+	string toString(){return "t_output :";}
 	void execute();
 };
 
@@ -168,9 +169,9 @@ private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	IfStmt();
-	~IfStmt();
-	string toString();
+	IfStmt(string i, Expr* e, int s):Stmt(i), p_expr(e), elsetarget(s){}
+	~IfStmt(){delete p_expr;}
+	string toString(){return "t_if: ";}
 	void execute();
 };
 
@@ -247,8 +248,33 @@ public:
 };
 
 void Compiler::buildAssign(){
-	//AssignStmt a;
-
+	tokitr++; lexitr++;
+	string n = "t_assign";
+	//string v = *lexitr;
+	AssignStmt* a = new AssignStmt(n, v, );
+	insttable.push_back(a);
+	tokitr++; lexitr++;
+}
+void Compiler::buildIf(){
+	tokitr++; lexitr++;
+	string n = "t_if";
+	IfStmt* i = new IfStmt();
+	insttable.push_back(i);
+	tokitr++; lexitr++;
+}
+void Compiler::buildWhile(){
+	tokitr++; lexitr++;
+	string n = "t_while";
+	WhileStmt* w = new WhileStmt();
+	insttable.push_back(w);
+	tokitr++; lexitr++;
+}
+void Compiler::buildStmt(){
+	tokitr++; lexitr++;
+	string n = "t_ExprOut";
+	ExprOutStmt* e = new ExprOutStmt();
+	insttable.push_back(e);
+	tokitr++; lexitr++;
 }
 
 void Compiler::buildInput(){
@@ -272,6 +298,12 @@ void Compiler::buildOutput(){
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
 }
+
+//Only need one
+void Compiler::buildExpr(Expr*&){
+
+}
+
 
 int main(){
 	// BOTH
