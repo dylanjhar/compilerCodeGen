@@ -102,7 +102,7 @@ public:
 	Stmt(string n):name(n){}
 	void setNamer(string n){name = n;}
 	string getName(){return name;}
-	virtual ~Stmt(){};
+	virtual ~Stmt(){}
 	virtual string toString() = 0;
 	virtual void execute() = 0;
 };
@@ -132,7 +132,7 @@ private:
 	string var;
 public:
 	InputStmt(string v):Stmt("t_input"), var(v){}
-	~InputStmt(){};
+	~InputStmt(){}
 	string toString(){return "t_input " + var;}
 	void execute(){
 		cout << "enter value for variable " << var << endl;
@@ -145,10 +145,10 @@ class StrOutStmt : public Stmt{
 private:
 	string value;
 public:
-	StrOutStmt();
-	~StrOutStmt();
-	string toString();
-	void execute();
+	StrOutStmt(string v):Stmt("t_output"), value(v){}
+	~StrOutStmt(){}
+	string toString(){return "t_output " + value;}
+	void execute(){cout << value << endl;}
 };
 
 class ExprOutStmt : public Stmt{
@@ -256,6 +256,19 @@ void Compiler::buildInput(){
 	tokitr++; lexitr++;
 	InputStmt* i = new InputStmt(*lexitr);
 	insttable.push_back(i);
+	tokitr++; lexitr++;
+	tokitr++; lexitr++;
+}
+
+void Compiler::buildOutput(){
+	tokitr++; lexitr++;
+	tokitr++; lexitr++;
+	if(*tokitr == "t_str"){
+		StrOutStmt* s = new StrOutStmt(*lexitr);
+		insttable.push_back(s);
+	} else {
+
+	}
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
 }
