@@ -68,9 +68,9 @@ class ConstExpr : public Expr{
 private:
 	int value;
 public:
-	ConstExpr(int val);
-	int eval();
-	string toString();
+	ConstExpr(int val):value(val){}
+	int eval(){return value;}
+	string toString(){return "ConstExpr: " + to_string(value);}
 };
 
 class IdExpr : public Expr{
@@ -180,9 +180,9 @@ private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	WhileStmt();
-	~WhileStmt();
-	string toString();
+	WhileStmt(Expr* expr, int elsetar):Stmt("t_while"), p_expr(expr), elsetarget(elsetar){};
+	~WhileStmt(){delete p_expr;}
+	string toString(){return "t_while: ";}
 	void execute();
 };
 
