@@ -90,8 +90,8 @@ private:
 	vector<string> ops;  // tokens of operators
 public:
 	~InFixExpr();
-	int eval();
-	string toString();
+	int eval(){return 0;}
+	string toString(){return "InFixExpr: ";}
 };
 
 
@@ -114,17 +114,12 @@ private:
 	string var;
 	Expr* p_expr;
 public:
-	AssignStmt(string n, string v, Expr* e): Stmt(n), var(v), p_expr(e){}
-	void setVar(string v){var = v;}
-	string getVar(){return var;}
-	void setExp(Expr* e){p_expr = e;}
-	Expr* getExp(){return p_expr;}
-	~AssignStmt();
-	string toString(){return "t_assign :";}
+	AssignStmt(string n, string v, Expr* e): Stmt(n), var(v), p_expr(e){};
+	~AssignStmt(){delete p_expr;}
+	string toString(){return "t_assign : " + var + " ";}
 	// used in data dump
-	void execute();
+	void execute(){;}
 	// executes the statement (changes contents of variable).
-	//var = p_expr;
 };
 
 class InputStmt : public Stmt{
@@ -159,8 +154,8 @@ private:
 public:
 	ExprOutStmt(string x, Expr* e):Stmt(x), p_expr(e){};
 	~ExprOutStmt(){delete p_expr;}
-	string toString(){return "t_output :";}
-	void execute();
+	string toString(){return "t_output : ";}
+	void execute(){cout << p_expr << endl;}
 };
 
 class IfStmt : public Stmt{
@@ -169,10 +164,17 @@ private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	IfStmt(string i, Expr* e, int s):Stmt(i), p_expr(e), elsetarget(s){}
+	IfStmt(string i, Expr* e, int s):Stmt(i), p_expr(e), elsetarget(s){};
 	~IfStmt(){delete p_expr;}
 	string toString(){return "t_if: ";}
-	void execute();
+	void execute(){
+		if (p_expr){
+			tokitr++; lexitr++;
+		}
+		else{
+
+		}
+	}
 };
 
 class WhileStmt : public Stmt{
@@ -250,8 +252,12 @@ public:
 void Compiler::buildAssign(){
 	tokitr++; lexitr++;
 	string n = "t_assign";
-	//string v = *lexitr;
-	AssignStmt* a = new AssignStmt(n, v, );
+	string v = *lexitr;
+	tokitr++; lexitr++;
+	while () {
+
+	}
+	AssignStmt* a = new AssignStmt(n, v, e);
 	insttable.push_back(a);
 	tokitr++; lexitr++;
 }
