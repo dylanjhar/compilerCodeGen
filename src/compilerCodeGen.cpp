@@ -89,11 +89,13 @@ private:
 	vector<Expr *> exprs;
 	vector<string> ops;  // tokens of operators
 public:
-	~InFixExpr();
+	InFixExpr(){}
+	~InFixExpr(){for(int i = 0; i < exprs.size(); i++){delete exprs[i];}}
+	void addExpr(Expr* e){exprs.push_back(e);}
+	void addOp(string o){ops.push_back(o);}
 	int eval(){return 0;}
 	string toString(){return "InFixExpr: ";}
 };
-
 
 class Stmt{ // statements are executed!
 private:
@@ -183,9 +185,10 @@ private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	WhileStmt(Expr* expr, int elsetar):Stmt("t_while"), p_expr(expr), elsetarget(elsetar){};
+	WhileStmt(Expr* e):Stmt("t_while"), p_expr(e), elsetarget(-1){}
 	~WhileStmt(){delete p_expr;}
 	string toString(){return "t_while: ";}
+	void setElseTarget(int e){elsetarget = e;}
 	void execute();
 };
 
@@ -194,10 +197,10 @@ class GoToStmt: public Stmt{
 private:
 	int elsetarget;
 public:
-	GoToStmt();
-	~GoToStmt();
-	string toString();
-	void execute();
+	GoToStmt(int e):Stmt("goto"), elsetarget(e){}
+	~GoToStmt(){}
+	string toString(){return "goto: " + to_string(elsetarget);}
+	void execute(){pc = elsetarget;}
 };
 
 class Compiler{
@@ -270,9 +273,11 @@ void Compiler::buildIf(){
 }
 void Compiler::buildWhile(){
 	tokitr++; lexitr++;
-	string n = "t_while";
-	WhileStmt* w = new WhileStmt();
+	tokitr++; lexitr++;
+	Expr* e = buildExpr();
+	WhileStmt* w = new WhileStmt(e);
 	insttable.push_back(w);
+	tokitr++; lexitr++;
 	tokitr++; lexitr++;
 }
 void Compiler::buildStmt(){
@@ -306,7 +311,7 @@ void Compiler::buildOutput(){
 }
 
 //Only need one
-void Compiler::buildExpr(Expr*&){
+Expr* Compiler::buildExpr(){
 
 }
 
