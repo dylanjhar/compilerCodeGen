@@ -88,14 +88,54 @@ class InFixExpr : public Expr{
 private:
 	vector<Expr *> exprs;
 	vector<string> ops;  // tokens of operators
+	int exprValue(int i);
 public:
 	InFixExpr(){}
 	~InFixExpr(){for(int i = 0; i < exprs.size(); i++){delete exprs[i];}}
 	void addExpr(Expr* e){exprs.push_back(e);}
 	void addOp(string o){ops.push_back(o);}
-	int eval(){return 0;}
+	int eval();
 	string toString(){return "InFixExpr: ";}
 };
+
+int InFixExpr::exprValue(int i){
+	int value;
+
+	ConstExpr* cptr = dynamic_cast<ConstExpr*>(exprs[i]);
+	if(cptr != nullptr){
+		value = cptr->eval();
+	} else{
+		IdExpr* iptr = dynamic_cast<IdExpr*>(exprs[i]);
+		value = iptr->eval();
+	}
+	return value;
+}
+
+int InFixExpr::eval(){
+	int x = 0;
+	int num = exprValue(0);
+	for(int i = 1; i < exprs.size(); i++){
+		if(ops[x] == "s_plus"){
+			num += exprValue(i);
+		} else if(ops[x] == "s_minus"){
+			num -= exprValue(i);
+		} else if(ops[x] == "s_mult"){
+			num *= exprValue(i);
+		} else if(ops[x] == "s_div"){
+			num /= exprValue(i);
+		} else if(ops[x] == "s_mod"){
+			num %= exprValue(i);
+		} else if(ops[x] == "s_lt"){
+			if(num < exprValue(i)){
+				num = 1;
+			} else{
+				num = 0;
+			}
+		}
+		x++;
+	}
+	return num;
+}
 
 class Stmt{ // statements are executed!
 private:
