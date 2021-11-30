@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <stack>
 #include <map>
 #include <string>
 using namespace std;
@@ -275,9 +276,10 @@ private:
 public:
 	WhileStmt(Expr* e):Stmt("t_while"), p_expr(e), elsetarget(-1){}
 	~WhileStmt(){delete p_expr;}
-	string toString(){return "t_while: ";}
+	string toString(){return "t_while: " + p_expr->toString() + "else: " + to_string(elsetarget);}
 	void setElseTarget(int e){elsetarget = e;}
-	void execute(){
+	int getElseTarget(){return elsetarget;}
+	void execute(){if(p_expr->eval() == 0){pc = elsetarget;}
 	}
 };
 
@@ -286,9 +288,11 @@ class GoToStmt: public Stmt{
 private:
 	int elsetarget;
 public:
-	GoToStmt(int e):Stmt("goto"), elsetarget(e){}
+	GoToStmt():Stmt("goto"), elsetarget(-1){}
 	~GoToStmt(){}
 	string toString(){return "goto: " + to_string(elsetarget);}
+	void setElseTarget(int e){elsetarget = e;}
+	int getElseTarget(){return elsetarget;}
 	void execute(){pc = elsetarget;}
 };
 
@@ -296,10 +300,11 @@ class Compiler{
 	// BOTH
 private:
 	void buildIf();
-	void buildWhile();
+	void buildWhile(); //DYLAN HARPER
+	void buildGoto();
 	void buildStmt();
 	void buildAssign();
-	void buildInput();
+	void buildInput(); //DYLAN HARPER
 	void buildOutput();
 	// use one of the following buildExpr methods
 	Expr* buildExpr();
@@ -335,8 +340,69 @@ public:
 
 	// The compile method is responsible for getting the instruction
 	// table built.  It will call the appropriate build methods.
-	bool compile(){}
+	bool compile(){
 		// DYLAN HARPER
+		pc = 0;
+		stack<int> ifstmt;
+		stack<int> whilestmt;
+		tokitr = tokens.begin();
+		lexitr = lexemes.begin();
+
+		while(*tokitr != "t_begin"){
+			tokitr++; lexitr++;
+		}
+		tokitr++; lexitr++;
+
+		while(tokitr != tokens.end() && pc != -1){
+			if(*tokitr == "t_if"){
+				buildIf();
+				ifstmt.push(pc);
+			} else if(*tokitr == "t_while"){
+				buildWhile();
+				ifstmt.push(pc);
+			} else if(*tokitr == "s_assign"){
+				buildAssign();
+			} else if(*tokitr == "t_output"){
+				buildOutput();
+			} else if(*tokitr == "t_input"){
+				buildInput();
+			} else if(*tokitr == "t_end"){
+				tokitr++; lexitr++;
+				if(tokitr != tokens.end()){
+					if(*tokitr == "t_loop"){
+						buildGoto();
+						GoToStmt* goptr = dynamic_cast<GoToStmt*>(insttable[pc]);
+						if(goptr != nullptr){
+							goptr->setElseTarget(whilestmt.top());
+						} else{
+							pc = -1;
+						}
+						WhileStmt* wptr = dynamic_cast<WhileStmt*>(insttable[whilestmt.top()]);
+						if(wptr != nullptr){
+							wptr->setElseTarget(pc + 1);
+							whilestmt.pop();
+						} else{
+							pc = -1;
+						}
+					} else{
+						IfStmt* ifptr = dynamic_cast<IfStmt*>(insttable[ifstmt.top()]);
+						if(ifptr != nullptr){
+
+							ifstmt.pop();
+						} else{
+							pc = -1;
+						}
+					}
+				}
+			}
+			pc++;
+		}
+		if(pc == -1){
+			return false;
+		}
+		return true;
+	}
+
 
 	// The run method will execute the code in the instruction table
 	void run(){
@@ -375,6 +441,11 @@ void Compiler::buildAssign(){
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
 	Expr* e = buildExpr();
+	if((symboltable[v] == "t_integer" && !isdigit(e->eval()))
+			|| (symboltable[v] == "t_str" && isdigit(e->eval()))){
+		cout << "Data types do not match: " << v << endl;
+		pc = -1;
+	}
 	AssignStmt* a = new AssignStmt(n, v, e);
 	insttable.push_back(a);
 	tokitr++; lexitr++;
@@ -397,6 +468,13 @@ void Compiler::buildWhile(){
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
 }
+
+void Compiler::buildGoto(){
+	GoToStmt* g = new GoToStmt();
+	insttable.push_back(g);
+	tokitr++; lexitr++;
+}
+
 void Compiler::buildStmt(){
 	if (*tokitr == "s_assign"){
 		tokitr++; lexitr++;
@@ -475,17 +553,40 @@ void Compiler::buildOutput(){
 
 //Only need one
 Expr* Compiler::buildExpr(){
-/*
-	if (*tokitr == ){
-
+	Expr* expr;
+	InFixExpr* inExpr;
+	tokitr++;
+	if(*tokitr == "s_rparen"){
+		tokitr--;
+		if(*tokitr == "t_int"){
+			expr = new ConstExpr(stoi(*lexitr));
+		} else if(*tokitr == "t_id"){
+			expr = new IdExpr(*lexitr);
+		}
+	} else{
+		tokitr--;
+		inExpr = new InFixExpr();
+		while(*tokitr != "s_semi" && *tokitr != "s_rparen"){
+			if(*tokitr == "t_int"){
+				Expr* x = new ConstExpr(stoi(*lexitr));
+				inExpr->addExpr(x);
+			} else if(*tokitr == "t_id"){
+				if(symboltable[*lexitr] == "t_integer"){
+					Expr* y = new IdExpr(*lexitr);
+					inExpr->addExpr(y);
+				} else{
+					cout << "Wrong data type for expression: " << *lexitr << endl;
+					pc = -1;
+				}
+			} else{
+				inExpr->addOp(*tokitr);
+			}
+			tokitr++; lexitr++;
+		}
+		expr = inExpr;
 	}
-	else if (*tokitr ==){
-
-	}
-	else if {*tokitr ==){
-
-	}
-*/
+	tokitr++; lexitr++;
+	return expr;
 }
 
 
@@ -495,8 +596,9 @@ int main(){
 	ifstream infile2("symbol1.txt");
 	if (!infile1 || !infile2) exit(-1);
 	Compiler c(infile1, infile2);
-	c.compile();
-	c.run();
+	if(c.compile()){
+		c.run();
+	}
 	dump();
 	return 0;
 }
