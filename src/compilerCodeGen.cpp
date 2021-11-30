@@ -379,7 +379,7 @@ public:
 						}
 						WhileStmt* wptr = dynamic_cast<WhileStmt*>(insttable[whilestmt.top()]);
 						if(wptr != nullptr){
-							wptr->setElseTarget(pc + 1);
+							wptr->setElseTarget(pc);
 							whilestmt.pop();
 						} else{
 							pc = -1;
@@ -387,15 +387,16 @@ public:
 					} else{
 						IfStmt* ifptr = dynamic_cast<IfStmt*>(insttable[ifstmt.top()]);
 						if(ifptr != nullptr){
-
+							ifptr->setElseTarget(pc);
 							ifstmt.pop();
 						} else{
 							pc = -1;
 						}
 					}
 				}
+			} else{
+				tokitr++; lexitr++;
 			}
-			pc++;
 		}
 		if(pc == -1){
 			return false;
@@ -449,6 +450,7 @@ void Compiler::buildAssign(){
 	AssignStmt* a = new AssignStmt(n, v, e);
 	insttable.push_back(a);
 	tokitr++; lexitr++;
+	pc++;
 }
 void Compiler::buildIf(){
 	tokitr++; lexitr++;
@@ -458,6 +460,7 @@ void Compiler::buildIf(){
 	IfStmt* i = new IfStmt(n, e);
 	insttable.push_back(i);
 	tokitr++; lexitr++;
+	pc++;
 }
 void Compiler::buildWhile(){
 	tokitr++; lexitr++;
@@ -467,12 +470,14 @@ void Compiler::buildWhile(){
 	insttable.push_back(w);
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
+	pc++;
 }
 
 void Compiler::buildGoto(){
 	GoToStmt* g = new GoToStmt();
 	insttable.push_back(g);
 	tokitr++; lexitr++;
+	pc++;
 }
 
 void Compiler::buildInput(){
@@ -482,6 +487,7 @@ void Compiler::buildInput(){
 	insttable.push_back(i);
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
+	pc++;
 }
 
 void Compiler::buildOutput(){
@@ -497,6 +503,7 @@ void Compiler::buildOutput(){
 		insttable.push_back(o);
 	}
 	tokitr++; lexitr++;
+	pc++;
 }
 
 //Only need one
