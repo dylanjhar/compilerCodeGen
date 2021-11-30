@@ -35,21 +35,26 @@ void dump(){
 	// BOTH
 	map<string, string>::iterator sitr;
 	map<string, int>::iterator vitr;
-
-	cout << "\nsymboltable:" << endl;
-	for(sitr = symboltable.begin(); sitr != symboltable.end(); sitr++) {
-		cout << sitr->first << " " << sitr->second << endl;
-	}
+	vector<Stmt *>::iterator inst;
 
 	cout << "\nvartable:" << endl;
 	for(vitr = vartable.begin(); vitr != vartable.end(); vitr++) {
 		cout << vitr->first << " " << vitr->second << endl;
 	}
+
+	cout << "\ninsttable:" << endl;
+	for(inst = insttable.begin(); inst != insttable.end(); inst++) {
+		cout << *inst << endl;
+	}
+
+	cout << "\nsymboltable:" << endl;
+	for(sitr = symboltable.begin(); sitr != symboltable.end(); sitr++) {
+		cout << sitr->first << " " << sitr->second << endl;
+	}
 }
 
 
 // You may need a few additional global methods to manipulate the global variables
-
 
 // Classes Stmt and Expr
 // It is assumed some methods in statement and expression objects will change and
@@ -79,7 +84,16 @@ private:
 	string id;
 public:
 	IdExpr(string i):id(i){}
-	int eval(){return 0;}
+	int eval(){
+		int value = -1;
+		map<string, int>::iterator vitr;
+		for(vitr = vartable.begin(); vitr != vartable.end(); vitr++) {
+			if (vitr->first == id){
+				int value = vitr->second;
+			}
+		}
+		return value;
+	}
 	string toString(){return "IdExpr: " + id;}
 };
 
@@ -131,6 +145,36 @@ int InFixExpr::eval(){
 			} else{
 				num = 0;
 			}
+		} else if (ops[x] == "s_le"){
+			if (num <= exprValue(i)){
+				num = 1;
+			} else{
+				num = 0;
+			}
+		} else if (ops[x] == "s_gt"){
+			if (num > exprValue(i)){
+				num = 1;
+			} else{
+				num = 0;
+			}
+		} else if (ops[x] == "s_ge"){
+			if (num >= exprValue(i)){
+				num = 1;
+			} else{
+				num = 0;
+			}
+		} else if (ops[x] == "s_eq"){
+			if (num == exprValue(i)){
+				num = 1;
+			} else{
+				num = 0;
+			}
+		} else if (ops[x] == "s_ne"){
+			if (num != exprValue(i)){
+				num = 1;
+			} else{
+				num = 0;
+			}
 		}
 		x++;
 	}
@@ -160,7 +204,9 @@ public:
 	~AssignStmt(){delete p_expr;}
 	string toString(){return "t_assign : " + var + " ";}
 	// used in data dump
-	void execute(){;}
+	void execute(){
+		vartable.insert({var, 0});
+	}
 	// executes the statement (changes contents of variable).
 };
 
@@ -206,7 +252,7 @@ private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	IfStmt(string i, Expr* e, int s):Stmt(i), p_expr(e), elsetarget(s){};
+	IfStmt(string i, Expr* e):Stmt(i), p_expr(e), elsetarget(-1){};
 	~IfStmt(){delete p_expr;}
 	string toString(){return "t_if: ";}
 	void execute(){
@@ -229,7 +275,8 @@ public:
 	~WhileStmt(){delete p_expr;}
 	string toString(){return "t_while: ";}
 	void setElseTarget(int e){elsetarget = e;}
-	void execute();
+	void execute(){
+	}
 };
 
 class GoToStmt: public Stmt{
@@ -253,7 +300,9 @@ private:
 	void buildInput();
 	void buildOutput();
 	// use one of the following buildExpr methods
-	void buildExpr(Expr*&);      Expr* buildExpr();
+	Expr* buildExpr();
+
+	//void buildExpr(Expr*&);
 
 	// headers for populate methods may not change
 	void populateTokenLexemes(istream& infile){
@@ -297,9 +346,8 @@ void Compiler::buildAssign(){
 	string n = "t_assign";
 	string v = *lexitr;
 	tokitr++; lexitr++;
-	while () {
-
-	}
+	tokitr++; lexitr++;
+	Expr* e = buildExpr();
 	AssignStmt* a = new AssignStmt(n, v, e);
 	insttable.push_back(a);
 	tokitr++; lexitr++;
@@ -307,7 +355,9 @@ void Compiler::buildAssign(){
 void Compiler::buildIf(){
 	tokitr++; lexitr++;
 	string n = "t_if";
-	IfStmt* i = new IfStmt();
+	tokitr++; lexitr++;
+	Expr* e = buildExpr();
+	IfStmt* i = new IfStmt(n, e);
 	insttable.push_back(i);
 	tokitr++; lexitr++;
 }
@@ -322,9 +372,7 @@ void Compiler::buildWhile(){
 }
 void Compiler::buildStmt(){
 	tokitr++; lexitr++;
-	string n = "t_ExprOut";
-	ExprOutStmt* e = new ExprOutStmt();
-	insttable.push_back(e);
+
 	tokitr++; lexitr++;
 }
 
