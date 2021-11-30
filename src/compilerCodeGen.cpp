@@ -202,7 +202,7 @@ private:
 public:
 	AssignStmt(string n, string v, Expr* e): Stmt(n), var(v), p_expr(e){};
 	~AssignStmt(){delete p_expr;}
-	string toString(){return "t_assign : " + var + " ";}
+	string toString(){return "s_assign : " + var + " ";}
 	// used in data dump
 	void execute(){
 		vartable.insert({var, 0});
@@ -242,7 +242,7 @@ private:
 public:
 	ExprOutStmt(string x, Expr* e):Stmt(x), p_expr(e){};
 	~ExprOutStmt(){delete p_expr;}
-	string toString(){return "t_output : ";}
+	string toString(){return "t_ExprOutStmt : ";}
 	void execute(){cout << p_expr << endl;}
 };
 
@@ -260,7 +260,9 @@ public:
 			tokitr++; lexitr++;
 		}
 		else{
-
+			while (*tokitr != "t_end"){
+				tokitr++, lexitr++;
+			}
 		}
 	}
 };
@@ -337,13 +339,38 @@ public:
 		// DYLAN HARPER
 
 	// The run method will execute the code in the instruction table
-	void run(){}
+	void run(){
 		// KEEGAN COLLINS
+		vector<Stmt *>::iterator inst;
+		/*
+		for(inst = insttable.begin(); inst != insttable.end(); inst++) {
+			if (insttable[inst] == ){
+
+			}
+			else if (insttable[inst] == ){
+
+			}
+			else if (insttable[inst] == ){
+
+			}
+			else if (insttable[inst] == ){
+
+			}
+			else if (insttable[inst] == ){
+
+			}
+			else if (insttable[inst] == ){
+
+			}
+		}
+		*/
+	}
+
 };
 
 void Compiler::buildAssign(){
 	tokitr++; lexitr++;
-	string n = "t_assign";
+	string n = "s_assign";
 	string v = *lexitr;
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
@@ -371,9 +398,53 @@ void Compiler::buildWhile(){
 	tokitr++; lexitr++;
 }
 void Compiler::buildStmt(){
-	tokitr++; lexitr++;
-
-	tokitr++; lexitr++;
+	if (*tokitr == "s_assign"){
+		tokitr++; lexitr++;
+		string n = "s_assign";
+		string v = *lexitr;
+		tokitr++; lexitr++;
+		tokitr++; lexitr++;
+		Expr* e = buildExpr();
+		AssignStmt* a = new AssignStmt(n, v, e);
+		insttable.push_back(a);
+		tokitr++; lexitr++;
+	}
+	else if (*tokitr == "t_if"){
+		tokitr++; lexitr++;
+		string n = "t_if";
+		tokitr++; lexitr++;
+		Expr* e = buildExpr();
+		IfStmt* i = new IfStmt(n, e);
+		insttable.push_back(i);
+		tokitr++; lexitr++;
+	}
+	else if (*tokitr == "t_while"){
+		tokitr++; lexitr++;
+		tokitr++; lexitr++;
+		Expr* e = buildExpr();
+		WhileStmt* w = new WhileStmt(e);
+		insttable.push_back(w);
+		tokitr++; lexitr++;
+		tokitr++; lexitr++;
+	}
+	else if (*tokitr == "t_input"){
+		tokitr++; lexitr++;
+		tokitr++; lexitr++;
+		InputStmt* i = new InputStmt(*lexitr);
+		insttable.push_back(i);
+		tokitr++; lexitr++;
+		tokitr++; lexitr++;
+	}
+	else if (*tokitr == "t_output"){
+		StrOutStmt* s = new StrOutStmt(*lexitr);
+		insttable.push_back(s);
+	}
+	else if (*tokitr == "t_output"){
+		string n = "t_output";
+		Expr* e = buildExpr();
+		ExprOutStmt* o = new ExprOutStmt(n, e);
+		insttable.push_back(o);
+	}
 }
 
 void Compiler::buildInput(){
@@ -391,8 +462,12 @@ void Compiler::buildOutput(){
 	if(*tokitr == "t_str"){
 		StrOutStmt* s = new StrOutStmt(*lexitr);
 		insttable.push_back(s);
-	} else {
-
+	} else if (*tokitr == "t_int"){
+		string n = "t_output";
+		tokitr++; lexitr++;
+		Expr* e = buildExpr();
+		ExprOutStmt* o = new ExprOutStmt(n, e);
+		insttable.push_back(o);
 	}
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
@@ -400,7 +475,17 @@ void Compiler::buildOutput(){
 
 //Only need one
 Expr* Compiler::buildExpr(){
+/*
+	if (*tokitr == ){
 
+	}
+	else if (*tokitr ==){
+
+	}
+	else if {*tokitr ==){
+
+	}
+*/
 }
 
 
