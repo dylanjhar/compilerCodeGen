@@ -188,6 +188,7 @@ public:
 	string toString(){return "s_assign: " + var + " " + p_expr->toString();}
 	void execute(){
 		vartable[var] = p_expr->eval();
+		pc++;
 	}
 };
 
@@ -202,6 +203,7 @@ public:
 	void execute(){
 		cout << "enter value for variable " << var << endl;
 		cin >> vartable[var];
+		pc++;
 	}
 };
 
@@ -213,7 +215,7 @@ public:
 	StrOutStmt(string v):Stmt("t_output"), value(v){}
 	~StrOutStmt(){}
 	string toString(){return "t_output: " + value;}
-	void execute(){cout << value << endl;}
+	void execute(){cout << value << endl; pc++;}
 };
 
 class ExprOutStmt : public Stmt{
@@ -224,7 +226,7 @@ public:
 	ExprOutStmt(string x, Expr* e):Stmt(x), p_expr(e){};
 	~ExprOutStmt(){delete p_expr;}
 	string toString(){return "t_ExprOutStmt: " + p_expr->toString();}
-	void execute(){cout << p_expr->toString() << endl;}
+	void execute(){cout << p_expr->toString() << endl; pc++;}
 };
 
 class IfStmt : public Stmt{
@@ -237,7 +239,7 @@ public:
 	~IfStmt(){delete p_expr;}
 	void setElseTarget(int e){elsetarget = e;}
 	string toString(){return "t_if: " + p_expr->toString() + " else: " + to_string(elsetarget);}
-	void execute(){if(p_expr->eval() == 0){pc = elsetarget;}}
+	void execute(){if(p_expr->eval() == 0){pc = elsetarget;} else{pc++;}}
 };
 
 class WhileStmt : public Stmt{
@@ -251,7 +253,7 @@ public:
 	string toString(){return "t_while: " + p_expr->toString() + " else: " + to_string(elsetarget);}
 	void setElseTarget(int e){elsetarget = e;}
 	int getElseTarget(){return elsetarget;}
-	void execute(){if(p_expr->eval() == 0){pc = elsetarget;}}
+	void execute(){if(p_expr->eval() == 0){pc = elsetarget;} else{pc++;}}
 };
 
 class GoToStmt: public Stmt{
@@ -327,20 +329,26 @@ public:
 			if(*tokitr == "t_if"){
 				ifstmt.push(pc);
 				buildIf();
+				pc++;
 			} else if(*tokitr == "t_while"){
 				whilestmt.push(pc);
 				buildWhile();
+				pc++;
 			} else if(*tokitr == "s_assign"){
 				buildAssign();
+				pc++;
 			} else if(*tokitr == "t_output"){
 				buildOutput();
+				pc++;
 			} else if(*tokitr == "t_input"){
 				buildInput();
+				pc++;
 			} else if(*tokitr == "t_end"){
 				tokitr++; lexitr++;
 				if(tokitr != tokens.end()){
 					if(*tokitr == "t_loop"){
 						buildGoto();
+						pc++;
 						GoToStmt* goptr = dynamic_cast<GoToStmt*>(insttable[pc - 1]);
 						if(goptr != nullptr){
 							goptr->setElseTarget(whilestmt.top());
@@ -379,7 +387,8 @@ public:
 	// The run method will execute the code in the instruction table
 	void run(){
 		// KEEGAN COLLINS
-		for(pc = 0; pc < insttable.size(); pc++) {
+		pc = 0;
+		while(pc < insttable.size()){
 			insttable[pc]->execute();
 		}
 	}
@@ -399,7 +408,6 @@ void Compiler::buildAssign(){
 	AssignStmt* a = new AssignStmt(n, v, e);
 	insttable.push_back(a);
 	tokitr++; lexitr++;
-	pc++;
 }
 void Compiler::buildIf(){
 	tokitr++; lexitr++;
@@ -409,7 +417,7 @@ void Compiler::buildIf(){
 	IfStmt* i = new IfStmt(n, e);
 	insttable.push_back(i);
 	tokitr++; lexitr++;
-	pc++;
+
 }
 void Compiler::buildWhile(){
 	tokitr++; lexitr++;
@@ -419,14 +427,14 @@ void Compiler::buildWhile(){
 	insttable.push_back(w);
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
-	pc++;
+
 }
 
 void Compiler::buildGoto(){
 	GoToStmt* g = new GoToStmt();
 	insttable.push_back(g);
 	tokitr++; lexitr++;
-	pc++;
+
 }
 
 void Compiler::buildInput(){
@@ -436,7 +444,7 @@ void Compiler::buildInput(){
 	insttable.push_back(i);
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
-	pc++;
+
 }
 
 void Compiler::buildOutput(){
@@ -452,7 +460,7 @@ void Compiler::buildOutput(){
 		insttable.push_back(o);
 	}
 	tokitr++; lexitr++;
-	pc++;
+
 }
 
 //Only need one
