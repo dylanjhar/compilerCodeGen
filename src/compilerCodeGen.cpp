@@ -1,10 +1,12 @@
 //============================================================================
 // Name        : compilerCodeGen.cpp
-// Author      :
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Assignment  : #5
+// Author      : Dylan Harper & Keegan Collins
+// Description : Part of the compiler that builds the instruction table
+//				 and executes the instructions
 //============================================================================
+
+//NOTICE: RUNS IN INFINITE LOOP
 
 #include <cstdlib>
 #include <iostream>
@@ -31,28 +33,7 @@ map<string, string> symboltable; 	// map of variables to datatype (i.e. sum t_in
 
 
 // Runtime Global Methods
-void dump(){
-	// prints vartable, insttable, symboltable
-	// BOTH
-	map<string, string>::iterator sitr;
-	map<string, int>::iterator vitr;
-	vector<Stmt *>::iterator inst;
 
-	cout << "\nvartable:" << endl;
-	for(vitr = vartable.begin(); vitr != vartable.end(); vitr++) {
-		cout << vitr->first << " " << vitr->second << endl;
-	}
-
-	cout << "\ninsttable:" << endl;
-	for(inst = insttable.begin(); inst != insttable.end(); inst++) {
-		cout << *inst << endl;
-	}
-
-	cout << "\nsymboltable:" << endl;
-	for(sitr = symboltable.begin(); sitr != symboltable.end(); sitr++) {
-		cout << sitr->first << " " << sitr->second << endl;
-	}
-}
 
 
 // You may need a few additional global methods to manipulate the global variables
@@ -86,16 +67,18 @@ private:
 public:
 	IdExpr(string i):id(i){}
 	int eval(){
+		bool found = false;
 		int value = -1;
 		map<string, int>::iterator vitr;
-		for(vitr = vartable.begin(); vitr != vartable.end(); vitr++) {
+		for(vitr = vartable.begin(); vitr != vartable.end() || !found; vitr++) {
 			if (vitr->first == id){
-				int value = vitr->second;
+				value = vitr->second;
+				found = true;
 			}
 		}
 		return value;
 	}
-	string toString(){return "IdExpr: " + id;}
+	string toString(){return "IdExpr: " + to_string(eval());}
 };
 
 class InFixExpr : public Expr{
@@ -110,12 +93,11 @@ public:
 	void addExpr(Expr* e){exprs.push_back(e);}
 	void addOp(string o){ops.push_back(o);}
 	int eval();
-	string toString(){return "InFixExpr: ";}
+	string toString(){return "InFixExpr: " + to_string(eval());}
 };
 
 int InFixExpr::exprValue(int i){
 	int value;
-
 	ConstExpr* cptr = dynamic_cast<ConstExpr*>(exprs[i]);
 	if(cptr != nullptr){
 		value = cptr->eval();
@@ -203,12 +185,10 @@ private:
 public:
 	AssignStmt(string n, string v, Expr* e): Stmt(n), var(v), p_expr(e){};
 	~AssignStmt(){delete p_expr;}
-	string toString(){return "s_assign : " + var + " ";}
-	// used in data dump
+	string toString(){return "s_assign: " + var + " " + p_expr->toString();}
 	void execute(){
-		vartable.insert({var, 0});
+		vartable[var] = p_expr->eval();
 	}
-	// executes the statement (changes contents of variable).
 };
 
 class InputStmt : public Stmt{
@@ -232,7 +212,7 @@ private:
 public:
 	StrOutStmt(string v):Stmt("t_output"), value(v){}
 	~StrOutStmt(){}
-	string toString(){return "t_output " + value;}
+	string toString(){return "t_output: " + value;}
 	void execute(){cout << value << endl;}
 };
 
@@ -243,8 +223,8 @@ private:
 public:
 	ExprOutStmt(string x, Expr* e):Stmt(x), p_expr(e){};
 	~ExprOutStmt(){delete p_expr;}
-	string toString(){return "t_ExprOutStmt : ";}
-	void execute(){cout << p_expr << endl;}
+	string toString(){return "t_ExprOutStmt: " + p_expr->toString();}
+	void execute(){cout << p_expr->toString() << endl;}
 };
 
 class IfStmt : public Stmt{
@@ -256,17 +236,8 @@ public:
 	IfStmt(string i, Expr* e):Stmt(i), p_expr(e), elsetarget(-1){};
 	~IfStmt(){delete p_expr;}
 	void setElseTarget(int e){elsetarget = e;}
-	string toString(){return "t_if: ";}
-	void execute(){
-		if (p_expr){
-			tokitr++; lexitr++;
-		}
-		else{
-			while (*tokitr != "t_end"){
-				tokitr++, lexitr++;
-			}
-		}
-	}
+	string toString(){return "t_if: " + p_expr->toString() + " else: " + to_string(elsetarget);}
+	void execute(){if(p_expr->eval() == 0){pc = elsetarget;}}
 };
 
 class WhileStmt : public Stmt{
@@ -277,11 +248,10 @@ private:
 public:
 	WhileStmt(Expr* e):Stmt("t_while"), p_expr(e), elsetarget(-1){}
 	~WhileStmt(){delete p_expr;}
-	string toString(){return "t_while: " + p_expr->toString() + "else: " + to_string(elsetarget);}
+	string toString(){return "t_while: " + p_expr->toString() + " else: " + to_string(elsetarget);}
 	void setElseTarget(int e){elsetarget = e;}
 	int getElseTarget(){return elsetarget;}
-	void execute(){if(p_expr->eval() == 0){pc = elsetarget;}
-	}
+	void execute(){if(p_expr->eval() == 0){pc = elsetarget;}}
 };
 
 class GoToStmt: public Stmt{
@@ -328,6 +298,7 @@ private:
 		infile >> vari >> tok;
 		while (!infile.eof()){
 			symboltable[vari] = tok;
+			vartable[vari] = 0;
 			infile >> vari >> tok;
 		}
 	}
@@ -352,14 +323,13 @@ public:
 			tokitr++; lexitr++;
 		}
 		tokitr++; lexitr++;
-
 		while(tokitr != tokens.end() && pc != -1){
 			if(*tokitr == "t_if"){
+				ifstmt.push(pc);
 				buildIf();
-				ifstmt.push(pc);
 			} else if(*tokitr == "t_while"){
+				whilestmt.push(pc);
 				buildWhile();
-				ifstmt.push(pc);
 			} else if(*tokitr == "s_assign"){
 				buildAssign();
 			} else if(*tokitr == "t_output"){
@@ -371,7 +341,7 @@ public:
 				if(tokitr != tokens.end()){
 					if(*tokitr == "t_loop"){
 						buildGoto();
-						GoToStmt* goptr = dynamic_cast<GoToStmt*>(insttable[pc]);
+						GoToStmt* goptr = dynamic_cast<GoToStmt*>(insttable[pc - 1]);
 						if(goptr != nullptr){
 							goptr->setElseTarget(whilestmt.top());
 						} else{
@@ -392,6 +362,7 @@ public:
 						} else{
 							pc = -1;
 						}
+						tokitr++; lexitr++;
 					}
 				}
 			} else{
@@ -408,31 +379,10 @@ public:
 	// The run method will execute the code in the instruction table
 	void run(){
 		// KEEGAN COLLINS
-		vector<Stmt *>::iterator inst;
-		/*
-		for(inst = insttable.begin(); inst != insttable.end(); inst++) {
-			if (insttable[inst] == ){
-
-			}
-			else if (insttable[inst] == ){
-
-			}
-			else if (insttable[inst] == ){
-
-			}
-			else if (insttable[inst] == ){
-
-			}
-			else if (insttable[inst] == ){
-
-			}
-			else if (insttable[inst] == ){
-
-			}
+		for(pc = 0; pc < insttable.size(); pc++) {
+			insttable[pc]->execute();
 		}
-		*/
 	}
-
 };
 
 void Compiler::buildAssign(){
@@ -442,8 +392,7 @@ void Compiler::buildAssign(){
 	tokitr++; lexitr++;
 	tokitr++; lexitr++;
 	Expr* e = buildExpr();
-	if((symboltable[v] == "t_integer" && !isdigit(e->eval()))
-			|| (symboltable[v] == "t_str" && isdigit(e->eval()))){
+	if(symboltable[v] == "t_str"){
 		cout << "Data types do not match: " << v << endl;
 		pc = -1;
 	}
@@ -509,7 +458,6 @@ void Compiler::buildOutput(){
 //Only need one
 Expr* Compiler::buildExpr(){
 	Expr* expr;
-	InFixExpr* inExpr;
 	tokitr++;
 	if(*tokitr == "s_rparen" || *tokitr == "s_semi"){
 		tokitr--;
@@ -521,14 +469,14 @@ Expr* Compiler::buildExpr(){
 		tokitr++; lexitr++;
 	} else{
 		tokitr--;
-		inExpr = new InFixExpr();
+		InFixExpr* inExpr = new InFixExpr();
 		while(*tokitr != "s_semi" && *tokitr != "s_rparen"){
 			if(*tokitr == "t_int"){
-				Expr* x = new ConstExpr(stoi(*lexitr));
+				ConstExpr* x = new ConstExpr(stoi(*lexitr));
 				inExpr->addExpr(x);
 			} else if(*tokitr == "t_id"){
 				if(symboltable[*lexitr] == "t_integer"){
-					Expr* y = new IdExpr(*lexitr);
+					IdExpr* y = new IdExpr(*lexitr);
 					inExpr->addExpr(y);
 				} else{
 					cout << "Wrong data type for expression: " << *lexitr << endl;
@@ -544,6 +492,28 @@ Expr* Compiler::buildExpr(){
 	return expr;
 }
 
+void dump(){
+	// prints vartable, insttable, symboltable
+	// BOTH
+	map<string, string>::iterator sitr;
+	map<string, int>::iterator vitr;
+	vector<Stmt *>::iterator inst;
+
+	cout << "\nvartable:" << endl;
+	for(vitr = vartable.begin(); vitr != vartable.end(); vitr++) {
+		cout << vitr->first << " " << vitr->second << endl;
+	}
+
+	cout << "\ninsttable:" << endl;
+	for(int i = 0; i < insttable.size(); i++) {
+		cout << insttable[i]->toString() << endl;
+	}
+
+	cout << "\nsymboltable:" << endl;
+	for(sitr = symboltable.begin(); sitr != symboltable.end(); sitr++) {
+		cout << sitr->first << " " << sitr->second << endl;
+	}
+}
 
 int main(){
 	// BOTH
